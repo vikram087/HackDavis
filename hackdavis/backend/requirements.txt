@@ -1,0 +1,4 @@
+Flask-Cors==4.0.0
+Flask==3.0.2
+sentence-transformers==2.7.0
+cachetools==5.3.3

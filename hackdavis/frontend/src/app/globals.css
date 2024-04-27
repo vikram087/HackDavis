@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.slanted-box {
+    width: 200px; 
+    height: 96px;
+    background-color: #006bb2;
+    clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+}
+
+body, html {
+    scroll-behavior: smooth;
+}
