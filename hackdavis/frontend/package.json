@@ -10,10 +10,16 @@
   },
   "dependencies": {
     "@propelauth/react": "^2.0.20",
+    "cropperjs": "^1.6.2",
+    "file-saver": "^2.0.5",
+    "firebase": "^10.11.1",
     "next": "14.2.3",
     "react": "^18",
+    "react-cropper": "^2.3.3",
     "react-dom": "^18",
-    "react-select": "^5.8.0"
+    "react-image-crop": "^11.0.5",
+    "react-select": "^5.8.0",
+    "react-webcam": "^7.2.0"
   },
   "devDependencies": {
     "@types/node": "^20",
