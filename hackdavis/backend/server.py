@@ -5,6 +5,13 @@ from sentence_transformers import SentenceTransformer
 from cachetools import TTLCache
 import cv2 
 from pytesseract import pytesseract 
+import firebase_admin
+from firebase_admin import credentials, storage
+
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'hackdavis-6f410.appspot.com/images'
+})
 
 client = Elasticsearch("http://localhost:9200")
 
@@ -210,13 +217,27 @@ def create_user():
 # /api/image
 @app.route("/api/image", methods=['POST'])
 def imageReader():
-    data = request.get_json()
-    image = str(data.get('image', '')) 
-    name = str(data.get('name', ''))
-    userName = str(data.get('userName', ''))
-    barcode = str(data.get('barcode', ''))
-       
-    img = cv2.imread(image)
+    print(request.form)
+    print(request.files)
+    name = request.form.get('name', '')
+    userName = request.form.get('userName', '')
+    barcode = request.form.get('barcode', '')
+
+    # Retrieve file data
+    try:
+        bucket = storage.bucket()
+        print(bucket)
+        blob = bucket.blob(f'{name}.png')  # Use curly braces for string formatting
+        print("bloy" + str(blob))
+        # Download the image to a temporary file
+        temp_file = f'{name}.png'
+        blob.download_to_filename(f'images/{name}.png')
+        # # Download the file
+        # destination_path = f'images/{name}.png'
+        # downloaded_blob = blob.download_to_filename(destination_path)
+    except:
+        print("hello")
+    img = cv2.imread(f'images/{name}.png')
     
     # Convert image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

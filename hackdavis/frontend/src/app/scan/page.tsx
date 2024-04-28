@@ -1,5 +1,6 @@
 'use client'
 
+
 import { MultiValue } from 'react-select/animated'
 import Header from '../components/header';
 import { AuthProvider } from '@propelauth/react';
@@ -85,3 +86,6 @@ export default function PastScans() {
     </AuthProvider>
   );
 }
+
+
+export default WebcamCapturePage;
