@@ -2,6 +2,8 @@
 import { collection, getDoc, doc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig"
+import Header from "../components/header";
+import { AuthProvider } from "@propelauth/react";
 
 export default function PastScans() {
     const [pastScans, setPastScans] = useState([]);
@@ -58,15 +60,20 @@ export default function PastScans() {
     };
 
     return (
-        <div>
-            <p className="text-center pt-10 text-3xl">Past Scans</p>
-            {items.map((item: any, index: number) => (
-                <div className="bg-gray-200 p-4 mb-4 cursor-pointer" key={index}>
-                    <div>Item Name: {item.name}</div>
-                    <div>Barcode Number: {pastScans[index]}</div>
-                    <span>Ingredients: {item.ingredients && item.ingredients.join(', ')}</span>
+        <AuthProvider authUrl="https://6961223141.propelauthtest.com">
+            <Header />
+            <div className="pt-10">
+                <p className="text-center text-3xl pb-10">Past Scans</p>
+                <div className="grid grid-cols-3 gap-4">
+                    {items.map((item: any, index: number) => (
+                        <div className="bg-gray-200 p-4" key={index}>
+                            <div>Item Name: {item.name}</div>
+                            <div>Barcode Number: {pastScans[index]}</div>
+                            <span>Ingredients: {item.ingredients && item.ingredients.join(', ')}</span>
+                        </div>
+                    ))}
                 </div>
-            ))}
-        </div>
+            </div>
+        </AuthProvider>
     );
 }

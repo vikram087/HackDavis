@@ -1,10 +1,7 @@
 'use client'
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 
 import React, { useState, useRef } from 'react'
-import { saveAs } from 'file-saver';
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -14,13 +11,13 @@ import ReactCrop, {
 } from 'react-image-crop'
 import { canvasPreview } from './canvasPreview'
 import { useDebounceEffect } from './useDebounceEffect'
-
+import { getStorage, ref, uploadBytes } from 'firebase/storage'
 import 'react-image-crop/dist/ReactCrop.css'
-import { Battambang } from 'next/font/google'
-import { error } from "console";
-
+import {app, db} from '../../firebaseConfig'
 // This is to demonstate how to make and center a % aspect crop
 // which is a bit trickier so we use some helper functions.
+const inputsyle = "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
@@ -118,23 +115,24 @@ export default function Capture({ image }: { image: any }) {
     const storage = getStorage(app);
     const storageRef = ref(storage, 'images/' + filename); // Adjust 'images/' according to your storage structure
     await uploadBytes(storageRef, file);
-  
+    const formData = new FormData();
+    formData.append('image', file);
+    fetch('http://127.0.0.1:8080/api/image', {
+      method: 'POST',
+      body: formData,
+    })
+      .then(
+        response => response.json()
+      ).then(data => {
+        console.log(data)
+      })
+      .catch(error => {
+        // Handle error
+      });
     // Optionally, you can revoke the object URL
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
     }
-    fetch(`http://localhost:8080/api/scans`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({'username': localStorage.getItem('username'), 'name': itemName, 'barcode': barcode})
-    }).then(response => response.json())
-        .then(data => {
-            console.log(data)
-        }).catch(error => {
-            console.error("Could not fetch")
-        })
   }
   
   
@@ -197,12 +195,13 @@ export default function Capture({ image }: { image: any }) {
   };
 
   return (
-    <div className="App">
+    <div className="App items-center justify-center">
       <div className="Crop-Controls">
       <form onSubmit={handleSubmit}>
       <div>
         <label htmlFor="itemName">Item Name:</label>
         <input
+        className={inputsyle}
           type="text"
           id="itemName"
           value={itemName}
@@ -213,6 +212,7 @@ export default function Capture({ image }: { image: any }) {
       <div>
         <label htmlFor="barcode">Barcode:</label>
         <input
+        className={inputsyle}
           type="text"
           id="barcode"
           value={barcode}
@@ -221,10 +221,11 @@ export default function Capture({ image }: { image: any }) {
         />
       </div>
     </form>
-        <input type="file" accept="image/*" onChange={onSelectFile} />
+        <input className={`${inputsyle} + mt-4`}type="file" accept="image/*" onChange={onSelectFile} />
         <div>
           <label htmlFor="scale-input">Scale: </label>
           <input
+          className={inputsyle}
             id="scale-input"
             type="number"
             step="0.1"
@@ -236,6 +237,7 @@ export default function Capture({ image }: { image: any }) {
         <div>
           <label htmlFor="rotate-input">Rotate: </label>
           <input
+          className={inputsyle}
             id="rotate-input"
             type="number"
             value={rotate}

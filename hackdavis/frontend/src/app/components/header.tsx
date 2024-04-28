@@ -2,7 +2,6 @@
 import { withAuthInfo, useRedirectFunctions, useLogoutFunction, WithAuthInfoProps } from '@propelauth/react'
 import React from "react";
 import "../globals.css"
-import { redirect } from 'next/navigation'
 import { useRouter } from 'next/navigation';
 import { db } from '../firebaseConfig';
 import { collection, setDoc, doc, getDoc } from "firebase/firestore";
@@ -72,13 +71,6 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
     }
     
     const router = useRouter();
-    const doSomething = () => {
-        if (!props.isLoggedIn) {
-            redirectToLoginPage();
-        } else {
-            console.log(props.user.userId);
-        }
-    }
 
     const handleSignInSignOut = () => {
         if (!props.isLoggedIn) {

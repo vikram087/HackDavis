@@ -26,7 +26,7 @@ const capture = () => {
   console.log(capturedImage)
 
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center">
       <Webcam
         audio={false}
         ref={webcamRef}
@@ -34,7 +34,7 @@ const capture = () => {
         width={640}
         height={480}
       />
-      <button onClick={capture}>Capture</button>
+      <button className='border p-4 bg-blue-600 opacity-25 rounded mt-4 text-black'onClick={capture}>Capture</button>
       {capturedImage && (
         <Capture image={capturedImage}></Capture>
       )}
