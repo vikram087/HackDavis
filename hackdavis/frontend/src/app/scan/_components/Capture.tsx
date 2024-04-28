@@ -64,7 +64,7 @@ export default function Capture({ image }: { image: any }) {
   const [scale, setScale] = useState(1)
   const [rotate, setRotate] = useState(0)
   const [aspect, setAspect] = useState<number | undefined>(16 / 9)
-
+  const [displayIfAllergic, setIfAllergic] = useState(false)
   function onSelectFile(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
       setCrop(undefined) // Makes crop preview update between images.
@@ -167,6 +167,7 @@ export default function Capture({ image }: { image: any }) {
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
     }
+    setIfAllergic(true)
   }
   
   
@@ -337,6 +338,7 @@ export default function Capture({ image }: { image: any }) {
             >
               Hidden download
             </a>
+            {displayIfAllergic && <p className='bold text-lg'>You are Allergic</p>}
           </div>
         </>
       )}
