@@ -3,6 +3,8 @@
 import React, { useRef, useState } from "react";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import Header from "../components/header";
+import { AuthProvider } from "@propelauth/react";
 
 export default function Search() {
     const [quer, setQuery] = useState("");
@@ -50,32 +52,36 @@ export default function Search() {
     
 
     const searchResults = results.map((result: any, index: number) => (
-        <div key={index}>
+        <div key={index} className="border border-black rounded-lg p-2 m-10">
             <div>Name: {result.name}</div>
             <div>Ingredients: {result.ingredients ? result.ingredients.join(', ') : 'No ingredients listed'}</div>
         </div>
     ));
     
     return (
-        <div>
-            <div className="bg-gray-200 rounded-full w-fit p-1">
-                <input 
-                    ref={inputRef} 
-                    className="bg-gray-200 outline-none ml-1" 
-                    type="text" 
-                    placeholder="Class Name"
-                    value={input} 
-                    onChange={(e) => handleChange(e.target.value)}
-                    onKeyDown={handleSubmit}
-                />
-                <button 
-                    type="button" 
-                    className="w-4 mr-1" 
-                    onClick={handleButtonClick}>
-                        <img src="/search.png" />
-                </button>
+        <AuthProvider authUrl="https://6961223141.propelauthtest.com">
+            <Header />
+            <div className="flex flex-col items-center"> 
+                <p className="py-10 text-3xl">Search Database</p>
+                <div className="mt-4 bg-gray-200 rounded-3xl flex items-center p-2 justify-center my-5"> {/* Added justify-center to center the search bar */}
+                    <input 
+                        ref={inputRef} 
+                        className="bg-gray-200 outline-none ml-1 text-lg p-2 w-96"
+                        type="text" 
+                        placeholder="Search Food Items"
+                        value={input} 
+                        onChange={(e) => handleChange(e.target.value)}
+                        onKeyDown={handleSubmit}
+                    />
+                    <button 
+                        type="button" 
+                        className="w-10 h-10 flex justify-center items-center ml-2"
+                        onClick={handleButtonClick}>
+                        <img src="/search.png" alt="Search" className="w-6 h-6"/> {/* Increased image size within button */}
+                    </button>
+                </div>
+                {searchPerformed && searchResults.length > 0 ? <div className="mt-4 text-center w-full">{searchResults}</div> : null}
             </div>
-            {searchPerformed && searchResults.length > 0 ? <div>{searchResults}</div> : null}
-        </div>
+        </AuthProvider>
     );
 }  

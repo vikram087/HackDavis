@@ -8,10 +8,44 @@ import { updateDoc, doc, getDoc, arrayUnion, arrayRemove } from "firebase/firest
 import { db } from '../firebaseConfig';
 
 const options: Flavor[] = [
+  { value: 'milk', label: 'Milk' },
+  { value: 'eggs', label: 'Eggs' },
+  { value: 'peanuts', label: 'Peanuts' },
+  { value: 'treeNuts', label: 'Tree Nuts' },
+  { value: 'soy', label: 'Soy' },
+  { value: 'wheat', label: 'Wheat' },
+  { value: 'fish', label: 'Fish' },
+  { value: 'shellfish', label: 'Shellfish' },
+  { value: 'sesame', label: 'Sesame' },
+  { value: 'mustard', label: 'Mustard' },
+  { value: 'celery', label: 'Celery' },
+  { value: 'lupin', label: 'Lupin' },
+  { value: 'sulfites', label: 'Sulfites' },
+  { value: 'molluscs', label: 'Molluscs' },
+  { value: 'corn', label: 'Corn' },
+  { value: 'gluten', label: 'Gluten' },
+  { value: 'kiwi', label: 'Kiwi' },
+  { value: 'banana', label: 'Banana' },
+  { value: 'latex', label: 'Latex' },
+  { value: 'garlic', label: 'Garlic' },
+  { value: 'chickpeas', label: 'Chickpeas' },
+  { value: 'buckwheat', label: 'Buckwheat' },
+  { value: 'almonds', label: 'Almonds' },
+  { value: 'hazelnuts', label: 'Hazelnuts' },
+  { value: 'walnuts', label: 'Walnuts' },
+  { value: 'cashews', label: 'Cashews' },
+  { value: 'pecans', label: 'Pecans' },
+  { value: 'oats', label: 'Oats' },
+  { value: 'coconut', label: 'Coconut' },
+  { value: 'peaches', label: 'Peaches' },
+  { value: 'tomatoes', label: 'Tomatoes' },
+  { value: 'strawberries', label: 'Strawberries' },
+  { value: 'citrus', label: 'Citrus' },
   { value: 'chocolate', label: 'Chocolate' },
-  { value: 'strawberry', label: 'Strawberry' },
-  { value: 'vanilla', label: 'Vanilla' }
+  { value: 'cinnamon', label: 'Cinnamon' },
+  { value: 'msg', label: 'MSG' }
 ];
+
 type Flavor = {
   value: string;
   label: string;
@@ -114,15 +148,15 @@ export default function Selecter() {
   
     return (
       <AuthProvider authUrl='https://6961223141.propelauthtest.com'>
+        <Header></Header>
         <div>
-          <Header></Header>
           <h1 className="text-3xl font-bold mb-8 p-[2%] text-center">Current Allergens</h1>
           <div className="flex justify-center items-center w-full space-x-10">
               {allergens.map((allergen: string, index: number) => (
-                  <div key={index} className="bg-gray-200 p-4 mb-4 cursor-pointer" onDoubleClick={() => removeFromDB(allergen)}>{allergen}</div>
+                  <div key={index} className="bg-gray-200 p-4 mb-20 cursor-pointer" onDoubleClick={() => removeFromDB(allergen)}>{allergen}</div>
               ))}
           </div>
-          <div className="flex flex-col justify-center items-center h-screen"> {/* Flex column container */}
+          <div className="flex flex-col justify-center items-center"> {/* Flex column container */}
             <div className="w-1/5"> {/* 20% of the viewport width */}
               <CreatableSelect 
                 isMulti 
