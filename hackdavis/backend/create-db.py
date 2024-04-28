@@ -20,5 +20,9 @@ def createNewIndex(name, delete):
     else:
         print("Index already exists and no deletion specified")
         
-createNewIndex("allergies", False)
-createNewIndex("users", False)
+# createNewIndex("allergies", False)
+# createNewIndex("users", False)
+
+def addMockData():
+    # user: a47abc25-8747-4dbc-bcfa-9ad21c165269
+    # pastScans: [0123456, 34897579, 8349587, 3048530]

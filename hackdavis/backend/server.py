@@ -26,6 +26,23 @@ def make_cache_key(query, sorting):
     key = f"{query}_{sorting}"
     return key
 
+# /api/pastscans
+@app.route("/api/pastscans", methods=['POST'])
+def getScans():
+    data = request.get_json()
+    username = str(data.get("username", ""))
+    document = client.get(index="users", id=username)
+    pastScans = document.pastScans
+    return jsonify({ "pastScans": pastScans })
+
+@app.route("/api/getItem", methods=['POST'])
+def getItem():
+    data = request.get_json()
+    barcodes = data.get("barcode", "")
+    document = client.get(index="allergies", id=barcodes)
+
+    return jsonify({ "document": document })
+
 def insert_documents(name, document, userName, barcode):
     allergens = document.split(",")
     
@@ -34,6 +51,7 @@ def insert_documents(name, document, userName, barcode):
     operations.append({
         "allergens": allergens,
         "name": name,
+        "barcode": barcode,
         "embedding": getEmbedding(name),
     })
     
