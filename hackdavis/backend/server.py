@@ -13,7 +13,7 @@ firebase_admin.initialize_app(cred, {
     'storageBucket': 'hackdavis-6f410.appspot.com/images'
 })
 
-client = Elasticsearch("http://localhost:9200")
+# client = Elasticsearch("http://localhost:9200")
 
 app = Flask(__name__)
 CORS(app)
@@ -179,91 +179,86 @@ def update_allergens():
 
 # /api/create-user
 # THIS WORKS, ALL DONE
-@app.route("/api/create-user", methods=['POST'])
-def create_user():
-    data = request.get_json()
-    userName = str(data.get('userName', ''))
+# @app.route("/api/create-user", methods=['POST'])
+# def create_user():
+#     data = request.get_json()
+#     userName = str(data.get('userName', ''))
     
-    if(client.exists(index="users", id=userName)):
-        return jsonify({"message": "User already exists", "id": userName}), 201
+#     if(client.exists(index="users", id=userName)):
+#         return jsonify({"message": "User already exists", "id": userName}), 201
     
-    if not userName:
-        return jsonify({"error": "Username is required"}), 400
+#     if not userName:
+#         return jsonify({"error": "Username is required"}), 400
 
-    document = {
-        "allergens": [], 
-        "pastScans": []  
-    }
+#     document = {
+#         "allergens": [], 
+#         "pastScans": []  
+#     }
 
-    try:
-        response = client.index(
-            index='users',
-            id=userName,  
-            body=document 
-        )
+#     try:
+#         response = client.index(
+#             index='users',
+#             id=userName,  
+#             body=document 
+#         )
         
-        size = client.search(query={"match_all": {}}, index="users")
-        for doc in size['hits']['hits']:
-            print(doc)
+#         size = client.search(query={"match_all": {}}, index="users")
+#         for doc in size['hits']['hits']:
+#             print(doc)
 
-        if response['result'] in ['created', 'updated']:
-            return jsonify({"message": "User created/updated successfully", "id": userName}), 201
-        else:
-            return jsonify({"error": "Failed to create/update user"}), 500
-    except Exception as e:
-        # Handle exceptions from Elasticsearch
-        return jsonify({"error": str(e)}), 500
+#         if response['result'] in ['created', 'updated']:
+#             return jsonify({"message": "User created/updated successfully", "id": userName}), 201
+#         else:
+#             return jsonify({"error": "Failed to create/update user"}), 500
+#     except Exception as e:
+#         # Handle exceptions from Elasticsearch
+#         return jsonify({"error": str(e)}), 500
 
-# /api/image
+
 @app.route("/api/image", methods=['POST'])
 def imageReader():
-    print(request.form)
-    print(request.files)
-    name = request.form.get('name', '')
-    userName = request.form.get('userName', '')
-    barcode = request.form.get('barcode', '')
+        print(request.form)
+        print(request.files)
+        name = request.form.get('name', '')
+        userName = request.form.get('userName', '')
+        barcode = request.form.get('barcode', '')
 
-    # Retrieve file data
-    try:
-        bucket = storage.bucket()
-        print(bucket)
-        blob = bucket.blob(f'{name}.png')  # Use curly braces for string formatting
-        print("bloy" + str(blob))
-        # Download the image to a temporary file
-        temp_file = f'{name}.png'
-        blob.download_to_filename(f'images/{name}.png')
-        # # Download the file
-        # destination_path = f'images/{name}.png'
-        # downloaded_blob = blob.download_to_filename(destination_path)
-    except:
-        print("hello")
-    img = cv2.imread(f'images/{name}.png')
-    
-    # Convert image to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
-    # Scale the image (200% zoom)
-    width, height = gray.shape[::-1]
-    gray = cv2.resize(gray, (2*width, 2*height), interpolation=cv2.INTER_CUBIC)
-    
-    # Apply Gaussian blur to remove noise (optional)
-    gray = cv2.GaussianBlur(gray, (5, 5), 0)
-    
-    # Apply thresholding to the image
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    
-    # Set tesseract command path
-    pytesseract.tesseract_cmd = r"/opt/homebrew/bin/tesseract"
-    
-    # Convert image to string
-    text = pytesseract.image_to_string(thresh)
-    
-    allergies = text[:-1]
-    # allergiesList = allergies.split(',')
-    # print(allergies)
- #   insert_documents(name, allergies, userName, barcode)
-    
-    return jsonify({"message": "User created successfully", "id": userName}), 201
+        # Retrieve file data
+        try:
+            bucket = storage.bucket()
+            print(bucket)
+            blob = bucket.blob(f'{name}.png')  # Use curly braces for string formatting
+            print("bloy" + str(blob))
+            # Download the image to a temporary file
+            blob.download_to_filename(f'images/{name}.png')
 
+        except:
+            print("hello")
+        img = cv2.imread(f'images/{name}.png')
+        
+        # Convert image to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Scale the image (200% zoom)
+        width, height = gray.shape[::-1]
+        gray = cv2.resize(gray, (2*width, 2*height), interpolation=cv2.INTER_CUBIC)
+        
+        # Apply Gaussian blur to remove noise (optional)
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # Apply thresholding to the image
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+
+        pytesseract.tesseract_cmd = r"/opt/homebrew/bin/tesseract"
+        
+        
+        text = pytesseract.image_to_string(thresh)
+        
+        allergies = text[:-1]
+
+        
+        return jsonify({"message": "User created successfully", "id": userName}), 201
+    
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

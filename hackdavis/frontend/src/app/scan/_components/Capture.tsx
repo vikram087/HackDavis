@@ -2,9 +2,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-
+import {app} from '../../firebaseConfig';
 import React, { useState, useRef } from 'react'
-import { saveAs } from 'file-saver';
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -18,7 +17,7 @@ import { useDebounceEffect } from './useDebounceEffect'
 import 'react-image-crop/dist/ReactCrop.css'
 import { Battambang } from 'next/font/google'
 import { error } from "console";
-
+import { getStorage, ref, uploadBytes } from "firebase/storage";
 // This is to demonstate how to make and center a % aspect crop
 // which is a bit trickier so we use some helper functions.
 function centerAspectCrop(
