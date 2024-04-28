@@ -10,7 +10,7 @@ const SignIn = withAuthInfo((props: WithAuthInfoProps) => {
     if (props.isLoggedIn) {
         return (
             <div>
-                <p>You are logged in as {props.user.email}</p>
+                <p>You are logged in as {props.user.email}{props.user.userId}</p>
                 <button onClick={() => redirectToAccountPage()}>Account</button>
                 <button onClick={() => logoutFunction(true)}>Logout</button>
             </div>
