@@ -4,6 +4,9 @@ import React from "react";
 import "../globals.css"
 import { redirect } from 'next/navigation'
 import { useRouter } from 'next/navigation';
+import { db } from '../firebaseConfig';
+import { collection, setDoc, doc, getDoc } from "firebase/firestore";
+
 const Header = withAuthInfo((props: WithAuthInfoProps) => {
     const logoutFunction = useLogoutFunction()
     const { redirectToLoginPage, redirectToSignupPage, redirectToAccountPage } = useRedirectFunctions()
@@ -12,33 +15,49 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
         try {
           const serializedValue = JSON.stringify(value);
           localStorage.setItem(key, serializedValue);
+          console.log(`storing user: ${serializedValue}`);
         } catch (error) {
           console.error('Error saving to localStorage', error);
         }
     };
-      
-    const submitToDB = (userName: String | undefined) => {
-        fetch("http://localhost:8080/api/create-user", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ "userName": userName }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log(data);
-        })
-        .catch(error => {
-          console.error('Error updating allergies:', error);
-        });
-    }
 
-    if (props.user?.userId !== null) {
-        saveToLocalStorage("username", props.user?.userId);
-        submitToDB(props.user?.userId);
-    }
+    const createUser = async (username: string) => {
+        if (!username) {
+            console.error("Username is undefined or empty");
+            return;
+        }
 
+        if(await checkDocumentExists("people", username)) {
+            console.log(`user exists: ${username}`);
+            return;
+        }
+    
+        const peopleRef = collection(db, "people");
+        const data = {
+            allergens: [],
+            pastScans: []
+        };
+    
+        try {
+            await setDoc(doc(peopleRef, username), data);
+            console.log(`creating user: ${username}`);
+        } catch (error) {
+            console.error("Failed to create user:", error);
+        }
+    };
+
+    async function checkDocumentExists(collectionName: string, documentId: string): Promise<boolean> {
+        const docRef = doc(db, collectionName, documentId);
+        const docSnap = await getDoc(docRef);
+    
+        return docSnap.exists();
+    }
+    
+    if (props.user?.userId) {
+        saveToLocalStorage("username", props.user.userId);
+        createUser(props.user.userId).catch(err => console.error("Error creating user:", err));
+    }
+    
     const removeFromLocalStorage = (key: string) => {
         try {
           localStorage.removeItem(key);
@@ -48,6 +67,7 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
     }; 
 
     if(!props.isLoggedIn) {
+        console.log(`removing user from local storage: ${localStorage.getItem("username")}`);
         removeFromLocalStorage("username");
     }
     
@@ -59,6 +79,7 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
             console.log(props.user.userId);
         }
     }
+
     const handleSignInSignOut = () => {
         if (!props.isLoggedIn) {
             redirectToLoginPage();
@@ -68,6 +89,14 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
     }
 
     const goToPastScans = () => {
+        if (!props.isLoggedIn) {
+            redirectToLoginPage();
+        } else {
+            router.push("/pastScans");
+        }
+    };
+
+    const goToScan = () => {
         if (!props.isLoggedIn) {
             redirectToLoginPage();
         } else {
@@ -100,7 +129,7 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
             <button onClick={goHome} className="text-yellow-500 text-5xl hover:text-gray-300">ProjectName</button>
             <div className="flex items-center space-x-24 justify-end"> {/* Adjusted justify-end here */}
                 <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={goToPastScans}>Past Scans {underLine}</button> 
-                <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={doSomething}>Scan an Item {underLine}</button> 
+                <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={goToScan}>Scan an Item {underLine}</button> 
                 <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={goToSearch}>Search Database {underLine}</button>
                 <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={updateProfile}>Update Profile {underLine}</button>
                 <button onClick={handleSignInSignOut} className="cursor-pointer hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500">{!props.isLoggedIn ? "Sign-In" : "Logout"}{underLine}</button>
