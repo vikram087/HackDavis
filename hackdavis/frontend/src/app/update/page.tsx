@@ -4,6 +4,8 @@ import { MultiValue } from 'react-select/animated'
 import Header from '../components/header';
 import { AuthProvider } from '@propelauth/react';
 import React, { useState } from 'react';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
+import { db } from '../firebaseConfig';
 
 const options: Flavor[] = [
   { value: 'chocolate', label: 'Chocolate' },
@@ -32,22 +34,30 @@ export default function Selecter() {
       }
     };
 
-    const submitToDB = () => {
-      fetch("http://localhost:8080/api/update-allergens", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ "userName": loadFromLocalStorage("username"), "allergens": selected }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-      })
-      .catch(error => {
-        console.error('Error updating allergies:', error);
-      });
-    };
+    const submitToDB = async () => {
+        const addDocument = async (collectionName: any, data: any) => {
+            const peopleRef = collection(db, "people");
+            const docRef = await setDoc(doc(peopleRef, loadFromLocalStorage("username")), data);
+            return docRef;
+        };
+        await addDocument('people', { "userName": loadFromLocalStorage("username"), "allergens": selected });
+    };    
+    //   fetch("http://localhost:8080/api/update-allergens", {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ "userName": loadFromLocalStorage("username"), "allergens": selected }),
+    //   })
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     console.log(data);
+    //   })
+    //   .catch(error => {
+    //     console.error('Error updating allergies:', error);
+    //   });
+    // };
+
 
     const handleChange = (selectedItems: any) => {
         console.log(selectedItems);
