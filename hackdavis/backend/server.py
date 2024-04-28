@@ -26,6 +26,16 @@ def make_cache_key(query, sorting):
     key = f"{query}_{sorting}"
     return key
 
+# /api/allergens
+@app.route("/api/allergens", methods=['POST'])
+def getAllergens():
+    data = request.get_json()
+    username = str(data.get("username", ""))
+    document = client.get(index="users", id=username)
+    allergens = document.allergens
+    return jsonify({ "allergens": allergens })
+
+
 # /api/pastscans
 @app.route("/api/pastscans", methods=['POST'])
 def getScans():
