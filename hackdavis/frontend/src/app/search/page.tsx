@@ -25,28 +25,29 @@ export default function Search() {
     const handleSubmit = async (e: any) => {
         if(e.key === 'Enter') {
             setQuery(input);
-            setResults(await searchItemsByName(input));
+            setResults(await searchItemsByName(input.toLowerCase()));
             setInput("");
             setSearchPerformed(true);
         }
     };
 
-    async function searchItemsByName(itemName: any) {
-        const itemsRef = collection(db, "items"); // Reference to the 'items' collection
-        const q = query(itemsRef, where("name", "==", itemName)); // Create a query against the collection
+    async function searchItemsByName(itemName: string) {
+        const itemsRef = collection(db, "items");
+        const q = query(itemsRef, where("name", ">=", itemName), where("name", "<=", itemName + '\uf8ff'));
     
         try {
-            const querySnapshot = await getDocs(q); // Execute the query
+            const querySnapshot = await getDocs(q);
             const items: any = [];
             querySnapshot.forEach((doc) => {
-                items.push({...doc.data(), id: doc.id}); // Push each found item into the array with its document ID
+                items.push({...doc.data(), id: doc.id});
             });
-            return items; // Return an array of items where name matches 'itemName'
+            return items;
         } catch (error) {
             console.error("Error fetching documents: ", error);
-            return []; // Return an empty array in case of error
+            return [];
         }
     }
+    
 
     const searchResults = results.map((result: any, index: number) => (
         <div key={index}>
