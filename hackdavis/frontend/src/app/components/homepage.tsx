@@ -32,8 +32,8 @@ export default function HomePage() {
                         </button>
                         </div>
                     </div>
-                        <div className="flex-1 -mt-20">
-                            <Image src="/diet-icon-new.jpg" width={350} height={400} alt="Aggie logo" />
+                        <div className="flex-1 -mt-40">
+                            <Image src="/diet-icon-new.jpg" width={450} height={450} alt="Aggie logo" />
                         </div>
                     </div>
                 </section>
@@ -74,10 +74,10 @@ export default function HomePage() {
                         </div>
                         <div onClick={doSomething} className="border flex flex-col items-center transition duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 rounded-3xl cursor-pointer">
                             <div className="flex flex-col justify-end h-[160px]">
-                                <Image src="/task.png" width={86} height={108} alt="" />
+                                <Image src="/rotate-ccw.svg" width={86} height={108} alt="" />
                             </div>
-                            <p className="pt-12 font-bold text-lg">Search an Existing Database</p>
-                            <p className="text-center px-5 pb-3">View entries scanned by other users.<br></br></p>
+                            <p className="pt-12 font-bold text-lg">View Past Scans</p>
+                            <p className="text-center px-5 pb-3">Review scans you have previously<br></br>uploaded, in order.</p>
                         </div>
                     </div>
 
