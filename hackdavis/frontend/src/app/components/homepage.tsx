@@ -50,7 +50,7 @@ export default function HomePage() {
                 <section className="relative pb-20">
                     <p className="py-10 text-center text-4xl font-semibold">Features</p>
 
-                    <div className="flex justify-between px-52 pt-24 pb-20">
+                    <div className="flex justify-between px-10 pt-24 pb-20">
                         <div onClick={doSomething} className="border flex flex-col items-center transition duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 rounded-3xl cursor-pointer">
                             <div className="flex flex-col justify-end h-[160px]"> 
                                 <Image src="/file-plus.svg" width={107} height={107} alt="" />
