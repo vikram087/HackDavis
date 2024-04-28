@@ -36,6 +36,7 @@ import { useDebounceEffect } from './useDebounceEffect'
 
 import 'react-image-crop/dist/ReactCrop.css'
 import { Battambang } from 'next/font/google'
+import { error } from "console";
 
 // This is to demonstate how to make and center a % aspect crop
 // which is a bit trickier so we use some helper functions.
@@ -141,6 +142,18 @@ export default function Capture({ image }: { image: any }) {
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
     }
+    fetch(`http://localhost:8080/api/scans`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({'username': localStorage.getItem('username'), 'name': itemName, 'barcode': barcode})
+    }).then(response => response.json())
+        .then(data => {
+            console.log(data)
+        }).catch(error => {
+            console.error("Could not fetch")
+        })
   }
   
   

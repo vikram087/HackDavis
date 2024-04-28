@@ -233,7 +233,7 @@ def imageReader():
     allergies = text[:-1]
     # allergiesList = allergies.split(',')
     # print(allergies)
-    insert_documents(name, allergies, userName, barcode)
+ #   insert_documents(name, allergies, userName, barcode)
     
     return jsonify({"message": "User created successfully", "id": userName}), 201
 
