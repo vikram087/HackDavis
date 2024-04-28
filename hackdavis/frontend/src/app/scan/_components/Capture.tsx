@@ -11,9 +11,11 @@ import ReactCrop, {
 } from 'react-image-crop'
 import { canvasPreview } from './canvasPreview'
 import { useDebounceEffect } from './useDebounceEffect'
-import { getStorage, ref, uploadBytes } from 'firebase/storage'
+import { getStorage, ref, uploadBytes} from 'firebase/storage'
+import { updateDoc, doc, arrayUnion, setDoc } from 'firebase/firestore'
 import 'react-image-crop/dist/ReactCrop.css'
 import {app, db} from '../../firebaseConfig'
+import PastScans from '@/app/pastScans/page'
 // This is to demonstate how to make and center a % aspect crop
 // which is a bit trickier so we use some helper functions.
 const inputsyle = "appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -37,6 +39,19 @@ function centerAspectCrop(
     mediaHeight,
   )
 }
+
+const loadFromLocalStorage = (key: string) => {
+  try {
+    const serializedValue = localStorage.getItem(key);
+    if (serializedValue === null) {
+      return undefined;
+    }
+    return JSON.parse(serializedValue);
+  } catch (error) {
+    console.error('Error reading from localStorage', error);
+    return undefined;
+  }
+};
 
 export default function Capture({ image }: { image: any }) {
   const [imgSrc, setImgSrc] = useState(image)
@@ -129,6 +144,25 @@ export default function Capture({ image }: { image: any }) {
       .catch(error => {
         // Handle error
       });
+
+      const updateDocument = async (collectionName:any, docId: any, newData: any) => {
+        const docRef = doc(db, collectionName, docId);
+        // This will update the document with new data, adding to the array without creating duplicates
+        const updateStatus = await updateDoc(docRef, {
+            pastScans: arrayUnion(newData.pastScans[0]) // Assuming newData.pastScans is an array containing the new scan
+        });
+    }
+  
+    const itemDocuemt =  async (collectionName:any, docId: any, newData: any) => {
+      const docRef = doc(db, collectionName, docId);
+      // This will update the document with new data, adding to the array without creating duplicates
+      const updateStatus = await setDoc(docRef, {
+          ingredients: ['breadn','afdfasdfa'],// Assuming newData.pastScans is an array containing the new scan
+          name: itemName.toLowerCase()
+      });
+  }
+      await updateDocument('people', loadFromLocalStorage('username'), { pastScans: [barcode] });
+      await itemDocuemt('items', barcode, {})
     // Optionally, you can revoke the object URL
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
