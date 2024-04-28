@@ -1,10 +1,58 @@
-// 'use client'
+'use client'
+import React, { useState } from 'react';
 
+export default function Scan() {
+    const [barcode, setBarcode] = useState("");
+
+    const showCamera = () => {
+        fetch(`http://localhost:8080/api/image`)
+        .then((response) => response.json())
+        .then(data => {
+            setBarcode(data.barcode);
+            // fetchData();
+        })
+    };
+
+    const fetchData = async () => {
+        const appId = '4a7fedbc'; // Replace with your Edamam app ID
+        const appKey = '2c98d1a25a374625c910796a81522c72'; // Replace with your Edamam app key
+      
+        try {
+          const response = await fetch('https://api.edamam.com/api/food-database/v2/parser', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              app_id: appId,
+              app_key: appKey,
+              upc: barcode,
+            }),
+          });
+      
+          if (!response.ok) {
+            throw new Error('Failed to fetch data');
+          }
+      
+          const data = await response.json();
+          console.log(data);
+          // Process the received data here
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+      
+    return (
+        <div>
+            <button onClick={showCamera}>Capture Barcode</button>
+            <div>{barcode}</div>
+        </div>
+    );
+}
 
 // import { MultiValue } from 'react-select/animated'
 // import Header from '../components/header';
 // import { AuthProvider } from '@propelauth/react';
-// import React, { useEffect, useState } from 'react';
 
 // export default function PastScans() {
 //   const [response, setResponse] = useState<any>([]);
