@@ -11,6 +11,8 @@
   "dependencies": {
     "@propelauth/react": "^2.0.20",
     "cropperjs": "^1.6.2",
+    "file-saver": "^2.0.5",
+    "firebase": "^10.11.1",
     "next": "14.2.3",
     "react": "^18",
     "react-cropper": "^2.3.3",
