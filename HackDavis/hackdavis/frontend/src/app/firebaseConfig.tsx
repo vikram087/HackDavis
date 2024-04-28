@@ -20,4 +20,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const db = getFirestore();
 
+<<<<<<< HEAD:hackdavis/frontend/src/app/firebaseConfig.tsx
 export {db ,app};
+=======
+export {app, db};
+>>>>>>> 469cf9dd (worked on firebase):HackDavis/hackdavis/frontend/src/app/firebaseConfig.tsx
