@@ -67,6 +67,22 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
         }
     }
 
+    const goToPastScans = () => {
+        if (!props.isLoggedIn) {
+            redirectToLoginPage();
+        } else {
+            router.push("/scan");
+        }
+    };
+
+    const goToSearch = () => {
+        if (!props.isLoggedIn) {
+            redirectToLoginPage();
+        } else {
+            router.push("/search");
+        }
+    };
+
     const updateProfile = () => {
         if (!props.isLoggedIn) {
             redirectToLoginPage();
@@ -83,8 +99,9 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
         <nav className="pl-8 pr-8 whitespace-nowrap flex items-center justify-between bg-sky-950 text-white h-24">
             <button onClick={goHome} className="text-yellow-500 text-5xl hover:text-gray-300">ProjectName</button>
             <div className="flex items-center space-x-24 justify-end"> {/* Adjusted justify-end here */}
+                <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={goToPastScans}>Past Scans {underLine}</button> 
                 <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={doSomething}>Scan an Item {underLine}</button> 
-                <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={doSomething}>Search Database {underLine}</button>
+                <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={goToSearch}>Search Database {underLine}</button>
                 <button className="hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500" onClick={updateProfile}>Update Profile {underLine}</button>
                 <button onClick={handleSignInSignOut} className="cursor-pointer hover:text-yellow-500 font-mono hover:opacity-100 ease-in-out relative group duration-500">{!props.isLoggedIn ? "Sign-In" : "Logout"}{underLine}</button>
             </div>

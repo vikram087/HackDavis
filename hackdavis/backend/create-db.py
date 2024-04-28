@@ -20,5 +20,5 @@ def createNewIndex(name, delete):
     else:
         print("Index already exists and no deletion specified")
         
-createNewIndex("allergies", False)
-createNewIndex("users", False)
+# createNewIndex("allergies", False)
+# createNewIndex("users", False)
