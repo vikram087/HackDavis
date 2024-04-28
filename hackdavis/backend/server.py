@@ -26,14 +26,15 @@ def make_cache_key(query, sorting):
     key = f"{query}_{sorting}"
     return key
 
-def insert_documents(name, document, userName):
+def insert_documents(name, document, userName, barcode):
     allergens = document.split(",")
-    operations = []
     
-    operations.append({'create': {'_index': 'allergies', "_id": name} })
+    operations = []
+    operations.append({'create': {'_index': 'allergies', "_id": barcode} })
     operations.append({
-        **allergens,
-        "embedding": getEmbedding(document),
+        "allergens": allergens,
+        "name": name,
+        "embedding": getEmbedding(name),
     })
     
     operations.append({
@@ -48,11 +49,11 @@ def insert_documents(name, document, userName):
             'source': 'if (ctx._source.containsKey("pastScans")) { ctx._source.pastScans.addAll(params.name); } else { ctx._source.pastScans = params.name; }',
             'lang': 'painless',
             'params': {
-                'pastScans': [name]
+                'pastScans': [barcode]
             }
         },
         'upsert': {
-            'pastScans': [name]  # If document does not exist, create a new one with these pastScans
+            'pastScans': [barcode]  # If document does not exist, create a new one with these pastScans
         }
     })
     
@@ -102,44 +103,55 @@ def search():
     else:
         return jsonify({"error": "No results found"}), 404    
 
-# /api/create-user
-@app.route("/api/create-user", methods=['POST'])
+# /api/update-allergens
+# LFGGGGGGGGGG THIS WORKS, ALL DONE
+@app.route("/api/update-allergens", methods=['POST'])
 def update_allergens():
     data = request.get_json()
     userName = str(data.get('userName', ''))  
-    allergens = str(data.get('allergens', ''))  
+    allergens = list(data.get('allergens', []))
 
-    operations = []
-    operations.append({
-        'update': {
-            '_index': 'users',
-            '_id': userName,
-            '_op_type': 'update'  # Specify update operation
-        }
-    })
-    operations.append({
-        'script': {
-            'source': 'ctx._source.pastScans = params.allergens;',
-            'lang': 'painless',
-            'params': {
-                'allergens': [allergens]
+    print(userName)
+    print(allergens)
+    
+    print(client.get(index="users", id=userName))
+
+    operations = [
+        {
+            'update': {
+                '_index': 'users',
+                '_id': userName,
             }
         },
-        'upsert': {
-            'allergens': [allergens]  # If document does not exist, create a new one with these pastScans
+        {
+            'script': {
+                'source': 'if (ctx._source.allergens != null) { ctx._source.allergens = params.allergens } else { ctx._source.allergens = params.allergens }',
+                'lang': 'painless',
+                'params': {
+                    'allergens': allergens
+                }
+            },
+            'upsert': {
+                'pastScans': [],
+                'allergens': allergens  # Proper initialization of allergens on creation
+            }
         }
-    })
+    ]
     
-    client.bulk(operations=operations)
+    client.bulk(body=operations)
     
-    return jsonify({"message": "User created successfully", "id": userName}), 201
+    return jsonify({"message": "Allergens created successfully", "id": userName}), 201
 
 # /api/create-user
+# THIS WORKS, ALL DONE
 @app.route("/api/create-user", methods=['POST'])
 def create_user():
     data = request.get_json()
     userName = str(data.get('userName', ''))
-
+    
+    if(client.exists(index="users", id=userName)):
+        return jsonify({"message": "User already exists", "id": userName}), 201
+    
     if not userName:
         return jsonify({"error": "Username is required"}), 400
 
@@ -154,6 +166,10 @@ def create_user():
             id=userName,  
             body=document 
         )
+        
+        size = client.search(query={"match_all": {}}, index="users")
+        for doc in size['hits']['hits']:
+            print(doc)
 
         if response['result'] in ['created', 'updated']:
             return jsonify({"message": "User created/updated successfully", "id": userName}), 201
@@ -170,6 +186,7 @@ def imageReader():
     image = str(data.get('image', '')) 
     name = str(data.get('name', ''))
     userName = str(data.get('userName', ''))
+    barcode = str(data.get('barcode', ''))
        
     img = cv2.imread(image)
     
@@ -195,7 +212,7 @@ def imageReader():
     allergies = text[:-1]
     # allergiesList = allergies.split(',')
     # print(allergies)
-    insert_documents(name, allergies, userName)
+    insert_documents(name, allergies, userName, barcode)
     
     return jsonify({"message": "User created successfully", "id": userName}), 201
 

@@ -8,12 +8,55 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
     const logoutFunction = useLogoutFunction()
     const { redirectToLoginPage, redirectToSignupPage, redirectToAccountPage } = useRedirectFunctions()
 
+    const saveToLocalStorage = (key: string, value: String | undefined) => {
+        try {
+          const serializedValue = JSON.stringify(value);
+          localStorage.setItem(key, serializedValue);
+        } catch (error) {
+          console.error('Error saving to localStorage', error);
+        }
+    };
+      
+    const submitToDB = (userName: String | undefined) => {
+        fetch("http://localhost:8080/api/create-user", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ "userName": userName }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+        })
+        .catch(error => {
+          console.error('Error updating allergies:', error);
+        });
+    }
+
+    if (props.user?.userId !== null) {
+        saveToLocalStorage("username", props.user?.userId);
+        submitToDB(props.user?.userId);
+    }
+
+    const removeFromLocalStorage = (key: string) => {
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.error('Error removing from localStorage', error);
+        }
+    }; 
+
+    if(!props.isLoggedIn) {
+        removeFromLocalStorage("username");
+    }
+    
     const router = useRouter();
     const doSomething = () => {
         if (!props.isLoggedIn) {
             redirectToLoginPage();
         } else {
-            console.log(props.user.userId)
+            console.log(props.user.userId);
         }
     }
     const handleSignInSignOut = () => {
