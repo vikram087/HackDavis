@@ -6,7 +6,13 @@ from cachetools import TTLCache
 import cv2 
 from pytesseract import pytesseract 
 
-client = Elasticsearch("http://localhost:9200")
+client = Elasticsearch(
+  "https://0d6359fa06e64215b54cdc773ff82d56.us-central1.gcp.cloud.es.io:443",
+  api_key="ZU9FZEk0OEJyckE0ZVY1OGtPOGc6SUJMazBRc3hTemFUOGlBTFVHb1lhQQ=="
+)
+print(client.info())
+
+# client = Elasticsearch("http://localhost:9200")
 
 app = Flask(__name__)
 CORS(app)
@@ -60,6 +66,29 @@ def insert_documents(name, document, userName):
 
 # cache.clear()
 # print("Cleared cache")
+
+# /api/userid
+@app.route("/api/userid", methods=['GET'])
+def getId():
+    data = request.get_json()
+    userName = str(data.get("userName", ""))
+
+# /api/pastscans
+@app.route("/api/pastscans", methods=['GET'])
+def getScans():
+    data = request.get_json()
+    pastScans = str(data.get("pastScans", ""))
+
+@app.route("/api/getItem", methods=['POST'])
+def getItem():
+    data = request.get_json()
+    barcodes = data.get("barcodes", "")
+    document = client.get(index="allergies", id=barcodes)
+
+    return jsonify({ "document": document })
+
+
+# ZU9FZEk0OEJyckE0ZVY1OGtPOGc6SUJMazBRc3hTemFUOGlBTFVHb1lhQQ==
 
 # /api/allergies
 @app.route("/api/allergies", methods=['POST'])

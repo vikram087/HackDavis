@@ -10,16 +10,17 @@ const options = [
 ]
 
 export default function Selecter() {
-    return (
-        <AuthProvider authUrl='https://6961223141.propelauthtest.com'>
-        <div>
-        <Header></Header>
-        <div className="flex justify-center items-center h-screen">
-        <div className="w-1/5"> {/* 20% of the viewport width */}
-          <CreatableSelect isMulti options={options} />
+  return (
+    <AuthProvider authUrl='https://6961223141.propelauthtest.com'>
+      <div>
+        <Header />
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h1 className="text-3xl font-bold ">Add New Allergens</h1>
+          <div className="w-1/5"> {/* 20% of the viewport width */}
+            <CreatableSelect isMulti options={options} />
+          </div>
         </div>
       </div>
-      </div>
-      </AuthProvider>
-    )
+    </AuthProvider>
+  );
 }
