@@ -1,8 +1,6 @@
 Flask>=2.0
 flask-cors>=3.0
 elasticsearch>=8.0
-python-dotenv>=0.19
 opencv-python>=4.5
-pyzbar>=0.1.8
 cachetools>=4.2
 sentence-transformers>=2.2
