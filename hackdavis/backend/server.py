@@ -10,7 +10,7 @@ from firebase_admin import credentials, storage
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred, {
-    'storageBucket': 'gs://hackdavis-6f410.appspot.com'
+    'storageBucket': 'hackdavis-6f410.appspot.com/images'
 })
 
 client = Elasticsearch("http://localhost:9200")
@@ -196,17 +196,20 @@ def imageReader():
     barcode = request.form.get('barcode', '')
 
     # Retrieve file data
-    bucket = storage.bucket()
-
-# Reference to the file you want to retrieve
-    blob = bucket.blob(f'images/{userName}.png')  # Use curly braces for string formatting
-    print("bloby")
-    print(blob)
-    # Download the file
-    destination_path = f'/Users/aariziqbal/Desktop/Coding/HackDavis/hackdavis/backend/images/{userName}.png'
-    downloaded_blob = blob.download_to_filename(destination_path)
-
-    img = cv2.imread(f'/images/{userName}.png')
+    try:
+        bucket = storage.bucket()
+        print(bucket)
+        blob = bucket.blob(f'{name}.png')  # Use curly braces for string formatting
+        print("bloy" + str(blob))
+        # Download the image to a temporary file
+        temp_file = f'{name}.png'
+        blob.download_to_filename(f'images/{name}.png')
+        # # Download the file
+        # destination_path = f'images/{name}.png'
+        # downloaded_blob = blob.download_to_filename(destination_path)
+    except:
+        print("hello")
+    img = cv2.imread(f'images/{name}.png')
     
     # Convert image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
