@@ -3,7 +3,7 @@ import CreatableSelect from 'react-select/creatable';
 import { MultiValue } from 'react-select/animated'
 import Header from '../components/header';
 import { AuthProvider } from '@propelauth/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const options: Flavor[] = [
   { value: 'chocolate', label: 'Chocolate' },
@@ -19,6 +19,11 @@ export default function Selecter() {
 
     const [selected, setSelected] = useState<String[]>([]);
     const [allergens, setAllergens] = useState<String[]>([]);
+
+    const submitButton = () => {
+      submitToDB()
+      getAllergens()
+    }
 
     const loadFromLocalStorage = (key: string) => {
       try {
@@ -70,6 +75,9 @@ export default function Selecter() {
         setSelected(flavorValues);
     };
 
+    useEffect(() => {
+      getAllergens();
+    }, []); 
 
     return (
       <AuthProvider authUrl='https://6961223141.propelauthtest.com'>
@@ -90,7 +98,7 @@ export default function Selecter() {
               />
             </div>
             <div className='text-center w-full mt-3'> {/* Full width to align the button center */}
-              <button onClick={submitToDB} className='border p-1 rounded-lg border-black'>Submit</button>
+              <button onClick={submitButton} className='border p-1 rounded-lg border-black'>Submit</button>
             </div>
           </div>
         </div>
