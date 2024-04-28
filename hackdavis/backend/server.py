@@ -1,18 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from elasticsearch import Elasticsearch
-from dotenv import load_dotenv
-import os
 from sentence_transformers import SentenceTransformer
 from cachetools import TTLCache
-
-load_dotenv()
-API_KEY = os.getenv('API_KEY')
-
-# client = Elasticsearch(
-#   "https://d3e6ab8052bf4bc79ddc6e6682153d0e.us-central1.gcp.cloud.es.io:443",
-#   api_key=API_KEY
-# )
+import cv2 
+from pytesseract import pytesseract 
 
 client = Elasticsearch("http://localhost:9200")
 
@@ -23,19 +15,6 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 def getEmbedding(text):
     return model.encode(text)
 
-# /api/papers/${paperId}
-@app.route('/api/papers/<paper_id>', methods=['GET'])
-def get_paper(paper_id):
-    doi = paper_id.replace("-", "/")
-
-    results = client.get(index="search-papers", id=doi)
-    paper = results['_source']
-    if paper:
-        return jsonify(paper)
-    else:
-        return jsonify({"error": "No results found"}), 404
-
-
 cache = TTLCache(maxsize=100, ttl=3600)
 def get_cached_results(cache_key):
     return cache.get(cache_key)
@@ -43,138 +22,182 @@ def get_cached_results(cache_key):
 def cache_results(cache_key, data):
     cache[cache_key] = data
     
-def make_cache_key(query, sorting, page, numResults):
-    key = f"{query}_{sorting}_{page}_{numResults}"
+def make_cache_key(query, sorting):
+    key = f"{query}_{sorting}"
     return key
+
+def insert_documents(name, document, userName):
+    allergens = document.split(",")
+    operations = []
+    
+    operations.append({'create': {'_index': 'allergies', "_id": name} })
+    operations.append({
+        **allergens,
+        "embedding": getEmbedding(document),
+    })
+    
+    operations.append({
+        'update': {
+            '_index': 'users',
+            '_id': userName,
+            '_op_type': 'update'  # Specify update operation
+        }
+    })
+    operations.append({
+        'script': {
+            'source': 'if (ctx._source.containsKey("pastScans")) { ctx._source.pastScans.addAll(params.name); } else { ctx._source.pastScans = params.name; }',
+            'lang': 'painless',
+            'params': {
+                'pastScans': [name]
+            }
+        },
+        'upsert': {
+            'pastScans': [name]  # If document does not exist, create a new one with these pastScans
+        }
+    })
+    
+    return client.bulk(operations=operations)
 
 # cache.clear()
 # print("Cleared cache")
 
-# /api/papers
-@app.route("/api/papers", methods=['POST'])
-def papers():
+# /api/allergies
+@app.route("/api/allergies", methods=['POST'])
+def search():
     data = request.get_json()
-    page = int(data.get('page', 0))
-    numResults = int(data.get('results', 0))
     query = str(data.get('query', ""))
     sorting = str(data.get('sorting', ""))
-    journals = str(data.get('journals', ""))
     
-    cache_key = make_cache_key(query, sorting, page, numResults)
+    cache_key = make_cache_key(query, sorting)
     cached = get_cached_results(cache_key)
     if cached:
         return jsonify({ "papers": cached[0], "total": cached[1], "accuracy": cached[2] })
-    
-    journalArr = [] if journals == "None" else journals.split(',') # fails to return results
 
-    if(sorting == "Most-Recent" or sorting == "Most-Relevant"):
-        sort = "desc"
-    elif(sorting == "Oldest-First"):
-        sort = "asc"
+    size = client.search(query={"match_all": {}}, index="allergies")['hits']['total']['value']
         
-    knnSearch = False
-        
-    # if journalArr:
-    #     base_query["query"] = {
-    #         "bool": {
-    #             "must": base_query["query"],
-    #             "filter": { "terms":  {"journal": journalArr}}
-    #         }
-    #     }
-        
-    # base_query = {
-    #     'size': 20, 
-    #     'from': 0, 
-    #     'sort': [{'date': {'order': 'desc'}}], 
-    #     'query': {"match": {'journal': 'PRB'}} # journal needs to be of type keyword
-    # }
-    
-    size = client.search(query={"match_all": {}}, index="search-papers")['hits']['total']['value']
-        
-    if query == "all":
-        results = client.search(
-            query={"match_all": {}},
-            size=numResults,
-            from_=(page-1)*numResults,
-            sort=[{"date": {"order": sort}}],
-            index="search-papers"
-        )
-    else:
-        knnSearch = True
-        if (sorting == "Most-Recent") or (sorting == "Oldest-First"):
-            results = client.search(
-                knn={
-                    'field': 'embedding',
-                    'query_vector': getEmbedding(query),
-                    'num_candidates': size,
-                    'k': size,
-                },
-                # size=numResults,
-                # from_=(page-1)*numResults,
-                from_=0,
-                size=size,
-                sort=[{"date": {"order": sort}}, "_score"],
-                index="search-papers"
-            )
-        elif sorting == "Most-Relevant":
-            results = client.search(
-                knn={
-                    'field': 'embedding',
-                    'query_vector': getEmbedding(query),
-                    'num_candidates': size,
-                    'k': size,
-                },
-                # size=numResults,
-                # from_=(page-1)*numResults,
-                from_=0,
-                size=size,
-                sort=[{'_score': {'order': sort}}],
-                index="search-papers"
-            )
-    #     results = client.search(
-    #     query={
-    #         'text_expansion': {
-    #             'elser_embedding': {
-    #                 'model_id': '.elser_model_2',
-    #                 'model_text': query,
-    #             }
-    #         },
-    #     },
-    #     size=numResults,
-    #     from_=(page-1)*numResults,
-    #     index="search-papers"
-    # )
+    results = client.search(
+        knn={
+            'field': 'embedding',
+            'query_vector': getEmbedding(query),
+            'num_candidates': size,
+            'k': 20,
+        },
+        from_=0,
+        size=size,
+        sort=[{'_score': {'order': 'desc'}}],
+        index="allergies"
+    )
         
     hits = results['hits']['hits']
-    papers = []
+    results = []
     accuracy = {}
     
-    if not knnSearch:
-        papers = [hit['_source'] for hit in hits]
-    
     for hit in hits:
-        if not knnSearch or not hit['_score']:
-            break
-        if hit['_score'] >= 0.6:
-            papers.append(hit['_source'])
-            accuracy[hit['_source']['doi']] = hit['_score']
-            
-    # total = results['hits']['total']['value']
-    filtered_papers = list(papers)
-    if knnSearch:
-        filtered_papers = papers[numResults*(page-1):numResults*page]
-        total = len(papers)
-    else:
-        total = results['hits']['total']['value']
-    
-    # print(f"total: {total}\nbase query: {base_query}\njournals: {journalArr}")
+        results.append(hit['_source'])
+        accuracy[hit['_source']['doi']] = hit['_score']
         
-    if papers:
-        # return jsonify(papers)
-        cache_results(cache_key, ( filtered_papers, total, accuracy ))
-        return jsonify({ "papers": filtered_papers, "total": total, "accuracy": accuracy })
+    if results:
+        cache_results(cache_key, ( results, accuracy ))
+        return jsonify({ "allergies": results, "accuracy": accuracy })
     else:
-        return jsonify({"error": "No results found"}), 404
+        return jsonify({"error": "No results found"}), 404    
+
+# /api/create-user
+@app.route("/api/create-user", methods=['POST'])
+def update_allergens():
+    data = request.get_json()
+    userName = str(data.get('userName', ''))  
+    allergens = str(data.get('allergens', ''))  
+
+    operations = []
+    operations.append({
+        'update': {
+            '_index': 'users',
+            '_id': userName,
+            '_op_type': 'update'  # Specify update operation
+        }
+    })
+    operations.append({
+        'script': {
+            'source': 'ctx._source.pastScans = params.allergens;',
+            'lang': 'painless',
+            'params': {
+                'allergens': [allergens]
+            }
+        },
+        'upsert': {
+            'allergens': [allergens]  # If document does not exist, create a new one with these pastScans
+        }
+    })
+    
+    client.bulk(operations=operations)
+    
+    return jsonify({"message": "User created successfully", "id": userName}), 201
+
+# /api/create-user
+@app.route("/api/create-user", methods=['POST'])
+def create_user():
+    data = request.get_json()
+    userName = str(data.get('userName', ''))
+
+    if not userName:
+        return jsonify({"error": "Username is required"}), 400
+
+    document = {
+        "allergens": [], 
+        "pastScans": []  
+    }
+
+    try:
+        response = client.index(
+            index='users',
+            id=userName,  
+            body=document 
+        )
+
+        if response['result'] in ['created', 'updated']:
+            return jsonify({"message": "User created/updated successfully", "id": userName}), 201
+        else:
+            return jsonify({"error": "Failed to create/update user"}), 500
+    except Exception as e:
+        # Handle exceptions from Elasticsearch
+        return jsonify({"error": str(e)}), 500
+
+# /api/image
+@app.route("/api/image", methods=['POST'])
+def imageReader():
+    data = request.get_json()
+    image = str(data.get('image', '')) 
+    name = str(data.get('name', ''))
+    userName = str(data.get('userName', ''))
+       
+    img = cv2.imread(image)
+    
+    # Convert image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # Scale the image (200% zoom)
+    width, height = gray.shape[::-1]
+    gray = cv2.resize(gray, (2*width, 2*height), interpolation=cv2.INTER_CUBIC)
+    
+    # Apply Gaussian blur to remove noise (optional)
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    # Apply thresholding to the image
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    # Set tesseract command path
+    pytesseract.tesseract_cmd = r"/opt/homebrew/bin/tesseract"
+    
+    # Convert image to string
+    text = pytesseract.image_to_string(thresh)
+    
+    allergies = text[:-1]
+    # allergiesList = allergies.split(',')
+    # print(allergies)
+    insert_documents(name, allergies, userName)
+    
+    return jsonify({"message": "User created successfully", "id": userName}), 201
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
