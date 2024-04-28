@@ -21,7 +21,26 @@ export default function Search() {
     const handleSubmit = (e: any) => {
         if(e.key === 'Enter') {
             setQuery(input);
+            passToBackend(localStorage.getItem("username")!, query);
+            setInput('');
         }
+    };
+
+    const passToBackend = (username: string, query: string) => {
+        fetch(`http://localhost:8080/api/allergies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({"username": username, "query": query}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch (error => {
+            console.error("Could not fetch item");
+        })
     };
 
     return (

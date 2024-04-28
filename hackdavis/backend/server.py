@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
-from cachetools import TTLCache
 import cv2 
 from pytesseract import pytesseract 
 
@@ -15,35 +14,24 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 def getEmbedding(text):
     return model.encode(text)
 
-cache = TTLCache(maxsize=100, ttl=3600)
-def get_cached_results(cache_key):
-    return cache.get(cache_key)
-
-def cache_results(cache_key, data):
-    cache[cache_key] = data
-    
-def make_cache_key(query, sorting):
-    key = f"{query}_{sorting}"
-    return key
-
 # /api/allergens
 @app.route("/api/allergens", methods=['POST'])
-def getAllergens():
+def getAllergens():    
     data = request.get_json()
     username = str(data.get("username", ""))
     document = client.get(index="users", id=username)
     allergens = document.allergens
     return jsonify({ "allergens": allergens })
 
-
 # /api/pastscans
 @app.route("/api/pastscans", methods=['POST'])
 def getScans():
-    data = request.get_json()
-    username = str(data.get("username", ""))
-    document = client.get(index="users", id=username)
-    pastScans = document.pastScans
-    return jsonify({ "pastScans": pastScans })
+    return jsonify({ "message": "message" })
+    # data = request.get_json()
+    # username = str(data.get("username", ""))
+    # document = client.get(index="users", id=username)
+    # pastScans = document["pastScans"]
+    # return jsonify({ "pastScans": pastScans })
 
 @app.route("/api/getItem", methods=['POST'])
 def getItem():
@@ -95,15 +83,12 @@ def insert_documents(name, document, userName, barcode):
 def search():
     data = request.get_json()
     query = str(data.get('query', ""))
-    sorting = str(data.get('sorting', ""))
     
-    cache_key = make_cache_key(query, sorting)
-    cached = get_cached_results(cache_key)
-    if cached:
-        return jsonify({ "papers": cached[0], "total": cached[1], "accuracy": cached[2] })
-
     size = client.search(query={"match_all": {}}, index="allergies")['hits']['total']['value']
-        
+    
+    if size == 0:
+        return jsonify({ "message": "nothing in DB" })
+    
     results = client.search(
         knn={
             'field': 'embedding',
@@ -126,7 +111,6 @@ def search():
         accuracy[hit['_source']['doi']] = hit['_score']
         
     if results:
-        cache_results(cache_key, ( results, accuracy ))
         return jsonify({ "allergies": results, "accuracy": accuracy })
     else:
         return jsonify({"error": "No results found"}), 404    

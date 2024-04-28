@@ -40,7 +40,7 @@ export default function PastScans() {
   };
 
     const fetchData = () => {
-        fetch(`http://localhost:8080/api/pastScans`, {
+        fetch(`http://localhost:8080/api/pastscans`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -49,10 +49,11 @@ export default function PastScans() {
         })
         .then(response => response.json())
         .then(data => {
-            const pastScans = data.pastScans;
-            pastScans.map(async (id: string) => {
-                getItem(id);
-            });
+            // const pastScans = data.pastScans;
+            // pastScans.map(async (id: string) => {
+            //     getItem(id);
+            // });
+            console.log(data.message);
         })
         .catch (error => {
         console.error("Could not fetch item");

@@ -71,7 +71,7 @@ const Header = withAuthInfo((props: WithAuthInfoProps) => {
         if (!props.isLoggedIn) {
             redirectToLoginPage();
         } else {
-            router.push("/scan");
+            router.push("/pastScans");
         }
     };
 
