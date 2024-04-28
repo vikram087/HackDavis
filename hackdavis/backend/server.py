@@ -209,7 +209,7 @@ def imageReader():
         # downloaded_blob = blob.download_to_filename(destination_path)
     except:
         print("hello")
-    img = cv2.imread(f'IMG_2990.png')
+    img = cv2.imread(f'images/{name}.png')
     
     # Convert image to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
